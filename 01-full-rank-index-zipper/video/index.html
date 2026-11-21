@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Every Clue Is an Address</title>
+<style>
+  :root{
+    --ink:#1e2448; --paper:#fbfaf7; --turq:#62d9fa; --lav:#cf9ef0;
+    --gold:#ffc23d; --red:#ff5d73; --green:#34d399; --txt:#e9ecfa; --dim:#7f87ab;
+  }
+  html,body{margin:0;padding:0;width:1920px;height:1080px;overflow:hidden;background:#0d1028;}
+  body{font-family:"Inter",sans-serif;-webkit-font-smoothing:antialiased;}
+  #stage{position:relative;width:1920px;height:1080px;overflow:hidden;
+    background:linear-gradient(135deg,#0c0f27 0%,#151a42 55%,#1f1745 100%);}
+  .blob{position:absolute;width:1100px;height:1100px;border-radius:50%;pointer-events:none;}
+  #blob1{background:radial-gradient(circle at center, rgba(98,217,250,.20) 0%, rgba(98,217,250,0) 62%);}
+  #blob2{background:radial-gradient(circle at center, rgba(207,158,240,.18) 0%, rgba(207,158,240,0) 62%);}
+  #blob3{background:radial-gradient(circle at center, rgba(255,194,61,.07) 0%, rgba(255,194,61,0) 60%);}
+  #dots{position:absolute;inset:0;opacity:.35;
+    background-image:radial-gradient(rgba(255,255,255,.10) 1px, transparent 1.4px);background-size:28px 28px;}
+
+  #card{position:absolute;left:52px;top:72px;width:936px;height:936px;background:var(--paper);border-radius:24px;
+    box-shadow:0 40px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);}
+  #cardFlash{position:absolute;inset:0;border-radius:24px;pointer-events:none;box-shadow:0 0 0 0 rgba(255,93,115,0);}
+  #grid{position:absolute;left:28px;top:28px;width:880px;height:880px;overflow:visible;}
+
+  #panel{position:absolute;left:1032px;top:72px;width:836px;height:936px;box-sizing:border-box;padding:34px 36px;
+    border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+    border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 70px rgba(0,0,0,.35);overflow:hidden;}
+  #hdr{display:flex;justify-content:space-between;align-items:center;height:22px;font-size:14px;letter-spacing:.16em;
+    text-transform:uppercase;font-weight:600;}
+  #chap{color:#8fe6ff;}
+  #stepno{color:var(--dim);letter-spacing:.08em;}
+  #title{margin-top:12px;font-family:"Inter Display","Inter",sans-serif;font-weight:700;font-size:38px;color:#fff;line-height:1.15;min-height:46px;}
+  #rule{margin-top:16px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--turq),var(--lav) 55%,rgba(207,158,240,0));transform-origin:left center;}
+  #beats{position:absolute;left:36px;right:36px;top:150px;height:400px;overflow:hidden;}
+  #beatsInner{position:absolute;left:0;right:0;top:0;}
+  .beat{font-size:23px;line-height:1.48;color:var(--txt);margin-bottom:16px;padding-left:18px;position:relative;}
+  .beat::before{content:"";position:absolute;left:0;top:9px;width:6px;height:calc(100% - 18px);border-radius:3px;background:rgba(255,255,255,.12);}
+  .beat.cur::before{background:linear-gradient(180deg,var(--turq),var(--lav));}
+  .beat b{color:#fff;font-weight:700;}
+  .pill{display:inline-block;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:.80em;line-height:1.25;
+    padding:1px 7px 2px;border-radius:7px;vertical-align:1px;white-space:nowrap;}
+  .cell{color:#fff;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.26);}
+  .clue{color:#9ae9ff;background:rgba(98,217,250,.13);border:1px solid rgba(98,217,250,.38);}
+  #title .pill{font-size:.72em;vertical-align:3px;}
+  .hi{color:#ffd166;font-weight:650;}
+  .bad{color:#ff7b8a;font-weight:800;}
+  .ok{color:#5be3a8;font-weight:700;}
+
+  #bottom{position:absolute;left:36px;right:36px;top:566px;height:336px;}
+  #ladder,#compare{position:absolute;inset:0;}
+  .lhdr{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+    color:#8fe6ff;font-weight:700;height:24px;}
+  .lhdr span:last-child{color:var(--dim);letter-spacing:.04em;text-transform:none;font-weight:500;font-size:14px;}
+  .lrow{display:flex;align-items:center;height:30px;margin-top:3px;border-radius:9px;padding:0 4px;position:relative;}
+  .lrow .glowbar{position:absolute;inset:-1px;border-radius:9px;border:2px solid rgba(255,209,102,.0);background:rgba(255,209,102,0);}
+  .ldig{width:30px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#0d1028;margin-right:10px;flex:none;}
+  .slot{flex:1;height:26px;margin-right:6px;border-radius:7px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);
+    position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .slot:last-child{margin-right:0;}
+  .slot .rk{position:absolute;left:7px;top:5px;font-size:12px;color:rgba(255,255,255,.35);font-family:"JetBrains Mono",monospace;font-weight:600;}
+  .slot .chip{font-family:"JetBrains Mono",monospace;font-weight:800;font-size:15px;color:#0d1028;background:#9ae9ff;border-radius:6px;padding:0 8px;line-height:20px;}
+  .crow{display:flex;align-items:center;height:42px;margin-top:4px;}
+  .crow .lt{width:22px;color:var(--dim);font-weight:800;font-size:20px;text-align:center;flex:none;}
+  .crow .lab{width:84px;flex:none;}
+  .crow .lab .pill{font-size:17px;}
+  .crow .rkb{width:56px;flex:none;color:#ffd166;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:16px;}
+  .dbox{width:44px;height:38px;margin-right:6px;border-radius:7px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);
+    display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-weight:800;font-size:22px;color:#fff;box-sizing:border-box;}
+  .dbox.unk{color:rgba(255,255,255,.28);}
+  .dbox.hl{border-color:#ffd166;background:rgba(255,209,102,.16);}
+  .cgap{height:12px;}
+
+  #badge{position:absolute;right:36px;top:30px;padding:6px 14px;border-radius:999px;background:#ff5d73;color:#fff;font-weight:800;font-size:16px;
+    letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,93,115,.45);opacity:0;}
+
+  /* overlays */
+  #chapterCard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;
+    background:radial-gradient(ellipse at center, rgba(13,16,40,.80) 0%, rgba(13,16,40,.94) 70%);}
+  #ccNum{font-size:22px;letter-spacing:.42em;text-transform:uppercase;color:#8fe6ff;font-weight:700;}
+  #ccName{margin-top:18px;font-family:"Inter Display","Inter",sans-serif;font-weight:800;font-size:84px;color:#fff;}
+  #ccLine{margin-top:26px;width:520px;height:4px;border-radius:2px;background:linear-gradient(90deg,rgba(98,217,250,0),var(--turq),var(--lav),rgba(207,158,240,0));}
+
+  #titleBox{position:absolute;left:1032px;top:72px;width:836px;height:936px;box-sizing:border-box;padding:70px 56px;opacity:0;}
+  #tbKicker{font-size:17px;letter-spacing:.32em;text-transform:uppercase;color:#8fe6ff;font-weight:700;}
+  #tbTitle{margin-top:26px;font-family:"Inter Display","Inter",sans-serif;font-weight:800;font-size:92px;line-height:1.0;color:#fff;}
+  #tbTitle span{background:linear-gradient(90deg,var(--turq),var(--lav));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #tbSub{margin-top:34px;font-size:27px;line-height:1.45;color:#cfd4ee;}
+  #tbChips{margin-top:40px;display:flex;flex-wrap:wrap;gap:14px;}
+  .tchip{padding:10px 18px;border-radius:999px;font-weight:700;font-size:20px;border:1.5px solid;}
+  #tbFoot{position:absolute;left:56px;bottom:64px;font-size:18px;color:var(--dim);}
+
+  #finalBox{position:absolute;left:1032px;top:72px;width:836px;height:936px;box-sizing:border-box;padding:64px 56px;opacity:0;}
+  #fbTitle{font-family:"Inter Display","Inter",sans-serif;font-weight:800;font-size:96px;color:#fff;}
+  #fbTitle span{background:linear-gradient(90deg,#ffd166,var(--turq),var(--lav));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #fbSub{margin-top:8px;font-size:24px;color:#cfd4ee;}
+  .fbItem{margin-top:26px;display:flex;gap:18px;align-items:flex-start;font-size:23px;line-height:1.42;color:var(--txt);opacity:0;}
+  .fbNum{flex:none;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0d1028;font-size:20px;}
+  #fbThanks{position:absolute;left:56px;bottom:60px;font-size:20px;color:var(--dim);opacity:0;}
+
+  svg text{font-family:"Inter",sans-serif;}
+  #prog{position:absolute;left:52px;top:1034px;width:1816px;height:5px;border-radius:3px;background:rgba(255,255,255,.08);opacity:0;}
+  #progFill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#62d9fa,#cf9ef0);}
+  .ptick{position:absolute;top:-4px;width:2px;height:13px;border-radius:1px;background:rgba(255,255,255,.28);}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="dots"></div>
+  <div class="blob" id="blob1"></div>
+  <div class="blob" id="blob2"></div>
+  <div class="blob" id="blob3"></div>
+
+  <div id="card">
+    <svg id="grid" viewBox="0 0 880 880" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="blur6" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>
+        <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      </defs>
+      <g id="gBg"></g><g id="gHlB"></g><g id="gHlA"></g><g id="gLinesThin"></g><g id="gGlow" filter="url(#blur6)"></g>
+      <g id="gLines"></g><g id="gArrows"></g><g id="gArcs"></g><g id="gBurst"></g><g id="gPos"></g><g id="gInnerNums"></g>
+      <g id="gPencil"></g><g id="gGhost"></g><g id="gVals"></g><g id="gFx"></g><g id="gTags"></g><g id="gConfetti"></g>
+    </svg>
+    <div id="cardFlash"></div>
+  </div>
+
+  <div id="panel">
+    <div id="hdr"><span id="chap"></span><span id="stepno"></span></div>
+    <div id="title"></div>
+    <div id="rule"></div>
+    <div id="badge">✗ CONTRADICTION</div>
+    <div id="beats"><div id="beatsInner"></div></div>
+    <div id="bottom">
+      <div id="ladder"></div>
+      <div id="compare"></div>
+    </div>
+  </div>
+
+  <div id="titleBox">
+    <div id="tbKicker">A guided logic solve</div>
+    <div id="tbTitle">Every Clue<br>Is an <span>Address</span></div>
+    <div id="tbSub">A complete, step-by-step solve of a Latin square with <b style="color:#fff">Full Rank</b> clues, <b style="color:#9ae9ff">index lines</b> and <b style="color:#e3c2ff">zipper lines</b>.</div>
+    <div id="tbChips">
+      <span class="tchip" style="color:#fff;border-color:rgba(255,255,255,.35)">Latin square</span>
+      <span class="tchip" style="color:#9ae9ff;border-color:rgba(98,217,250,.6)">Index lines</span>
+      <span class="tchip" style="color:#e3c2ff;border-color:rgba(207,158,240,.6)">Zipper lines</span>
+      <span class="tchip" style="color:#ffd166;border-color:rgba(255,209,102,.6)">Full Rank</span>
+    </div>
+    <div id="tbFoot">Pause any time: every step is on screen until the next.</div>
+  </div>
+
+  <div id="finalBox">
+    <div id="fbTitle"><span>Solved!</span></div>
+    <div id="fbSub">How the puzzle came apart:</div>
+    <div class="fbItem"><div class="fbNum" style="background:#cf9ef0">1</div><div>The top zipper forces a <b style="color:#fff">9</b> in the middle of row 1: mirror cells sum to 9.</div></div>
+    <div class="fbItem"><div class="fbNum" style="background:#ffd166">2</div><div><b style="color:#fff">Rank buckets:</b> a number starting with <i>d</i> has rank 4d−3 … 4d.</div></div>
+    <div class="fbItem"><div class="fbNum" style="background:#62d9fa">3</div><div>The ring index line makes every clue <b style="color:#fff">the address of its partner</b>.</div></div>
+    <div class="fbItem"><div class="fbNum" style="background:#5be3a8">4</div><div>Once all 36 ranks are known, <b style="color:#fff">digit-by-digit comparisons</b> inside each bucket finish the grid.</div></div>
+    <div id="fbThanks">Thanks for watching, and happy solving!</div>
+  </div>
+
+  <div id="prog"><div id="progFill"></div></div>
+  <div id="chapterCard"><div id="ccNum"></div><div id="ccName"></div><div id="ccLine"></div></div>
+</div>
+<script src="steps.js"></script>
+<script src="engine.js"></script>
+</body>
+</html>

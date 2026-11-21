@@ -1,0 +1,23 @@
+{
+  "name": "cipher-loop-video",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "preview": "node preview.js out 30 120",
+    "render": "node capture.js 0 1 build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.0.20",
+    "@fontsource/space-grotesk": "^5.0.18",
+    "@fontsource/unbounded": "^5.0.20",
+    "gsap": "^3.12.5",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
